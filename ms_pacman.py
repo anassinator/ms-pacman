@@ -35,8 +35,15 @@ class MsPacManGame(object):
 
         self._ale.loadROM("MS_PACMAN.BIN")
 
+        self._reward = 0
+
         self.__ram = self._ale.getRAM()
         self._update_state()
+
+    @property
+    def reward(self):
+        """Current total reward."""
+        return self._reward
 
     @property
     def ms_pacman_position(self):
@@ -69,7 +76,9 @@ class MsPacManGame(object):
             Partial reward gained since last action.
         """
         self._update_state()
-        return self._ale.act(action)
+        partial_reward = self._ale.act(action)
+        self._reward += partial_reward
+        return partial_reward
 
     def game_over(self):
         """Returns whether the game reached a terminal state or not."""
@@ -77,6 +86,7 @@ class MsPacManGame(object):
 
     def reset_game(self):
         """Resets the game to the initial state."""
+        self._reward = 0
         return self._ale.reset_game()
 
     def _update_state(self):
