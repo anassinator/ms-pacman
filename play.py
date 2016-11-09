@@ -29,9 +29,8 @@ if __name__ == "__main__":
     actions = game.available_actions()
 
     for episode in range(args.episodes):
-        total_reward = 0
         while not game.game_over():
             a = actions[randrange(len(actions))]
-            total_reward += game.act(a)
-        print("episode {}: {}".format(episode + 1, total_reward))
+            game.act(a)
+        print("episode {}: {}".format(episode + 1, game.reward))
         game.reset_game()
