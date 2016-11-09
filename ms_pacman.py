@@ -1,76 +1,91 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import sys
-import argparse
-from random import randrange
 from ale_python_interface import ALEInterface
 
 
-def get_interface(args):
-    """Gets Arcade Learning Environment Interface.
+class MsPacManGame(object):
 
-    Args:
-        args: Command-line arguments.
+    """Ms. Pac-Man Arcade Learning Environment wrapper class."""
 
-    Returns:
-        ALEInterface.
-    """
-    ale = ALEInterface()
+    def __init__(self, seed, display):
+        """Constructs a MsPacManGame.
 
-    if args.seed:
-        ale.setInt("random_seed", args.seed)
+        Args:
+            seed: Initial random seed.
+            display: Whether to display onto the screen or not.
+        """
+        self._ale = ALEInterface()
 
-    if args.display:
-        if sys.platform == "darwin":
-            # Use PyGame in macOS.
-            import pygame
-            pygame.init()
+        if seed:
+            self._ale.setInt("random_seed", seed)
 
-            # Sound doesn't work on macOS.
-            ale.setBool("sound", False)
-        elif sys.platform.startswith("linux"):
-            ale.setBool("sound", True)
+        if display:
+            if sys.platform == "darwin":
+                # Use PyGame in macOS.
+                import pygame
+                pygame.init()
 
-        ale.setBool("display_screen", True)
+                # Sound doesn't work on macOS.
+                self._ale.setBool("sound", False)
+            elif sys.platform.startswith("linux"):
+                self._ale.setBool("sound", True)
 
-    ale.loadROM("MS_PACMAN.BIN")
+            self._ale.setBool("display_screen", True)
 
-    return ale
+        self._ale.loadROM("MS_PACMAN.BIN")
 
+        self.__ram = self._ale.getRAM()
+        self._update_state()
 
-def get_args():
-    """Gets parsed command-line arguments.
+    @property
+    def ms_pacman_position(self):
+        """Ms. PacMan's position as an (x, y) tuple."""
+        return self._ms_pacman_position
 
-    Returns:
-        Parsed command-line arguments.
-    """
-    parser = argparse.ArgumentParser(description="plays Ms. Pac-Man")
-    parser.add_argument("--episodes", default=10, type=int,
-                        help="number of episodes to run")
-    parser.add_argument("--display", action="store_true", default=False,
-                        help="whether to display the game on screen or not")
-    parser.add_argument("--seed", default=None, type=int,
-                        help="seed for random number generator to use")
+    @property
+    def ghost_positions(self):
+        """Ghost positions as a list of (x, y) tuples."""
+        return self._ghost_positions
 
-    return parser.parse_args()
+    def available_actions(self):
+        """Returns a list of available actions to consider."""
+        return [
+            0,  # noop
+            1,  # fire
+            2,  # up
+            3,  # right
+            4,  # left
+            5   # down
+        ]
 
+    def act(self, action):
+        """Plays a given action in the game.
 
-if __name__ == "__main__":
-    args = get_args()
-    ale = get_interface(args)
-    actions = [
-        0,  # noop
-        1,  # fire
-        2,  # up
-        3,  # right
-        4,  # left
-        5   # down
-    ]
+        Args:
+            action: Action to play.
 
-    for episode in range(args.episodes):
-        total_reward = 0
-        while not ale.game_over():
-            a = actions[randrange(len(actions))]
-            total_reward += ale.act(a)
-        print("episode {}: {}".format(episode + 1, total_reward))
-        ale.reset_game()
+        Returns:
+            Partial reward gained since last action.
+        """
+        self._update_state()
+        return self._ale.act(action)
+
+    def game_over(self):
+        """Returns whether the game reached a terminal state or not."""
+        return self._ale.game_over()
+
+    def reset_game(self):
+        """Resets the game to the initial state."""
+        return self._ale.reset_game()
+
+    def _update_state(self):
+        """Updates the internal state of the game."""
+        self._ale.getRAM(self.__ram)
+        self._ms_pacman_position = (self.__ram[10], self.__ram[16])
+        self._ghost_positions = [
+            (self.__ram[6], self.__ram[12]),
+            (self.__ram[7], self.__ram[13]),
+            (self.__ram[8], self.__ram[14]),
+            (self.__ram[9], self.__ram[15])
+        ]
