@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import cv2
 import argparse
 from random import randrange
 from ms_pacman import MsPacManGame
@@ -32,5 +33,10 @@ if __name__ == "__main__":
         while not game.game_over():
             a = actions[randrange(len(actions))]
             game.act(a)
+            game_map = game.map
+
+            if args.display:
+                cv2.imshow("map", game_map.to_image())
+                cv2.waitKey(1)
         print("episode {}: {}".format(episode + 1, game.reward))
         game.reset_game()

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+from game_map import GameMap
 from ale_python_interface import ALEInterface
 
 
@@ -39,13 +40,20 @@ class MsPacManGame(object):
         self._ms_pacman_direction = self._ms_pacman_position = (0, 0)
         self._ghost_directions = self._ghost_positions = [(0, 0)] * 4
 
+        self.__screen = self._ale.getScreen()
         self.__ram = self._ale.getRAM()
+
         self._update_state()
 
     @property
     def reward(self):
         """Current total reward."""
         return self._reward
+
+    @property
+    def map(self):
+        """Current game map."""
+        return self._map
 
     @property
     def ms_pacman_position(self):
@@ -117,9 +125,8 @@ class MsPacManGame(object):
 
     def _update_state(self):
         """Updates the internal state of the game."""
+        # Get new states from RAM.
         self._ale.getRAM(self.__ram)
-
-        # Get new states.
         new_ms_pacman_position = (int(self.__ram[10]), int(self.__ram[16]))
         new_ghost_positions = [
             (int(self.__ram[6]), int(self.__ram[12])),
@@ -142,3 +149,8 @@ class MsPacManGame(object):
         # Update positions.
         self._ms_pacman_position = new_ms_pacman_position
         self._ghost_positions = new_ghost_positions
+
+        # Get new map from screen.
+        if self._ale.getFrameNumber() % 10 == 0:
+            self._ale.getScreen(self.__screen)
+            self._map = GameMap(self.__screen.reshape(210, 160))
