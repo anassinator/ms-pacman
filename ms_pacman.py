@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import random
 from game_map import GameMap, SlicedGameMap
 from game_map_objects import GameMapObjects
 from ale_python_interface import ALEInterface
@@ -14,13 +15,14 @@ class MsPacManGame(object):
         """Constructs a MsPacManGame.
 
         Args:
-            seed: Initial random seed.
+            seed: Initial random seed, randomized when None.
             display: Whether to display onto the screen or not.
         """
         self._ale = ALEInterface()
 
-        if seed:
-            self._ale.setInt("random_seed", seed)
+        if seed is None:
+            seed = random.randint(0, 255)
+        self._ale.setInt("random_seed", seed)
 
         if display:
             if sys.platform == "darwin":
