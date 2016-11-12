@@ -58,21 +58,8 @@ class GameMap(object):
             GameMapObjects enum.
         """
         primary_count = histogram[self.PRIMARY_COLOR]
-        ms_pacman_count = histogram[self.MS_PACMAN_COLOR]
-        ghost_count = sum(histogram[c] for c in self.GHOST_COLORS)
-
-        # Check if ghost.
-        if ghost_count:
-            return GameMapObjects.GHOST
-
         total_count = self._width_step * self._height_step
-
         primary_ratio = primary_count / total_count
-        ms_pacman_ratio = ms_pacman_count / total_count
-
-        # Check if Ms. PacMan.
-        if ms_pacman_ratio >= 0.30:
-            return GameMapObjects.MS_PACMAN
 
         # Check if wall.
         if primary_ratio >= 0.40:
