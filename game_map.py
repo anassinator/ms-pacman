@@ -2,18 +2,8 @@
 
 import cv2
 import numpy as np
-
-
-class GameMapObjects(object):
-
-    """Game map object enumerations."""
-
-    EMPTY = 0
-    WALL = 1
-    PELLET = 2
-    POWER_UP = 3
-    GHOST = 4
-    MS_PACMAN = 5
+from map_proc import get_slice
+from game_map_objects import GameMapObjects
 
 
 class GameMap(object):
@@ -114,19 +104,46 @@ class GameMap(object):
         for i in range(self.WIDTH):
             for j in range(self.HEIGHT):
                 classification = self._map[j, i]
-                color = [136, 28, 0]  # Dark blue.
-                if classification == GameMapObjects.WALL:
-                    color = [111, 111, 228]  # Pink-ish.
-                elif classification == GameMapObjects.PELLET:
-                    color = [255, 255, 255]  # White.
-                elif classification == GameMapObjects.POWER_UP:
-                    color = [255, 255, 0]  # Cyan.
-                elif classification == GameMapObjects.GHOST:
-                    color = [0, 0, 255]  # Red
-                elif classification == GameMapObjects.MS_PACMAN:
-                    color = [0, 255, 0]  # Green.
-                image[j, i] = color
+                image[j, i] = GameMapObjects.to_color(classification)
 
         upscaled_image = cv2.resize(image, (160, 168),
+                                    interpolation=cv2.INTER_NEAREST)
+        return upscaled_image
+
+
+class SlicedGameMap(object):
+
+    """Sliced game map."""
+
+    RADIUS = 2
+
+    def __init__(self, game_map, ms_pacman_position):
+        """Constructs a SlicedGameMap.
+
+        Args:
+            game_map: Full game map.
+            ms_pacman_position: Ms. PacMan's position.
+        """
+        self._map = get_slice(game_map, ms_pacman_position, self.RADIUS)
+
+    @property
+    def map(self):
+        """Map of GameMapObjects."""
+        return self._map
+
+    def to_image(self):
+        """Converts map to a viewable image.
+
+        Returns:
+            OpenCV image.
+        """
+        height, width = self._map.shape
+        image = np.zeros((height, width, 3), dtype=np.uint8)
+        for i in range(width):
+            for j in range(height):
+                classification = self._map[j, i]
+                image[j, i] = GameMapObjects.to_color(classification)
+
+        upscaled_image = cv2.resize(image, (100, 100),
                                     interpolation=cv2.INTER_NEAREST)
         return upscaled_image

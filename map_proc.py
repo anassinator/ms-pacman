@@ -2,7 +2,7 @@
 
 import numpy as np
 from collections import deque
-from game_map import GameMapObjects
+from game_map_objects import GameMapObjects
 
 
 def get_slice(game_map, pac_pos, radius):

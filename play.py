@@ -34,9 +34,11 @@ if __name__ == "__main__":
             a = actions[randrange(len(actions))]
             game.act(a)
             game_map = game.map
+            sliced_game_map = game.sliced_map
 
             if args.display:
                 cv2.imshow("map", game_map.to_image())
+                cv2.imshow("sliced map", sliced_game_map.to_image())
                 cv2.waitKey(1)
         print("episode {}: {}".format(episode + 1, game.reward))
         game.reset_game()

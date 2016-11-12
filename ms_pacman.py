@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from game_map import GameMap, GameMapObjects
+from game_map import GameMap, SlicedGameMap
+from game_map_objects import GameMapObjects
 from ale_python_interface import ALEInterface
 
 
@@ -54,6 +55,11 @@ class MsPacManGame(object):
     def map(self):
         """Current game map."""
         return self._map
+
+    @property
+    def sliced_map(self):
+        """Current game slice map."""
+        return self._sliced_map
 
     @property
     def ms_pacman_position(self):
@@ -183,3 +189,5 @@ class MsPacManGame(object):
             self._map.map[self._ms_pacman_position] = GameMapObjects.MS_PACMAN
             for ghost_pos in self._ghost_positions:
                 self._map.map[ghost_pos] = GameMapObjects.GHOST
+            self._sliced_map = SlicedGameMap(self._map,
+                                             self._ms_pacman_position)
