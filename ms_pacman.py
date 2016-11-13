@@ -122,26 +122,22 @@ class MsPacManGame(object):
             self._ms_pacman_position[0] + m[0],
             self._ms_pacman_position[1] + m[1]
         )
-        next_raw_pos = self._to_raw_position(next_pos)
         old_reward = self._reward
 
-        if self._raw_ms_pacman_position[0] < next_raw_pos[0]:
-            next_raw_pos = (next_raw_pos[0] + 1, next_raw_pos[1])
-        else:
-            next_raw_pos = (next_raw_pos[0] - 1, next_raw_pos[1])
+        if GameMapObjects.to_reward(self._map.map[next_pos]) <= 0:
+            while self._ms_pacman_position != next_pos:
+                if self.game_over():
+                    break
+                self._reward += self._ale.act(action)
+                self._update_state()
 
-        if self._raw_ms_pacman_position[1] < next_raw_pos[1]:
-            next_raw_pos = (next_raw_pos[0], next_raw_pos[1] + 1)
         else:
-            next_raw_pos = (next_raw_pos[0], next_raw_pos[1] - 1)
+            while self._reward == old_reward:
+                if self.game_over():
+                    break
+                self._reward += self._ale.act(action)
+                self._update_state()
 
-        while abs(self._raw_ms_pacman_position[0] - next_raw_pos[0]) > 1 or \
-                abs(self._raw_ms_pacman_position[1] - next_raw_pos[1]) > 1:
-            if self.game_over():
-                return -100
-            partial_reward = self._ale.act(action)
-            self._update_state()
-            self._reward += partial_reward
         self._update_map()
         return self._reward - old_reward
 
