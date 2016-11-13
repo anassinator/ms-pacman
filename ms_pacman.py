@@ -21,7 +21,7 @@ class MsPacManGame(object):
         self._ale = ALEInterface()
 
         if seed is None:
-            seed = random.randint(0, 255)
+            seed = random.randint(0, 25500)
         self._ale.setInt("random_seed", seed)
 
         if display:
@@ -102,18 +102,25 @@ class MsPacManGame(object):
             (4, (0, -1)),  # left
             (5, (1, 0))    # down
         ]:
-            new_pos = (
-                self.ms_pacman_position[0] + move[0],
-                self.ms_pacman_position[1] + move[1]
-            )
-            if 0 <= new_pos[0] < GameMap.HEIGHT and \
-                    0 <= new_pos[1] < GameMap.WIDTH:
+            new_pos = self.get_next_position(move)
+            if 0 <= new_pos[0] < GameMap.HEIGHT:
                 if self._map.map[new_pos] != GameMapObjects.WALL:
                     actions.append(action)
         return actions
 
     def action_to_move(self, action):
         return [(-1, 0), (0, 1), (0, -1), (1, 0)][action - 2]
+
+    def get_next_position(self, move):
+        new_pos = (
+            self.ms_pacman_position[0] + move[0],
+            self.ms_pacman_position[1] + move[1]
+        )
+        if new_pos[1] < 0:
+            new_pos = (new_pos[0], new_pos[1] + GameMap.WIDTH)
+        elif new_pos[1] >= GameMap.WIDTH:
+            new_pos = (new_pos[0], new_pos[1] - GameMap.WIDTH)
+        return new_pos
 
     def act(self, action):
         """Plays a given action in the game.
@@ -125,10 +132,7 @@ class MsPacManGame(object):
             Partial reward gained since last action.
         """
         m = self.action_to_move(action)
-        next_pos = (
-            self._ms_pacman_position[0] + m[0],
-            self._ms_pacman_position[1] + m[1]
-        )
+        next_pos = self.get_next_position(m)
         old_reward = self._reward
         old_lives = self._lives
         old_pos = self._ms_pacman_position
