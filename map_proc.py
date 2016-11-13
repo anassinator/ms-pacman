@@ -31,7 +31,7 @@ def get_slice(game_map, pac_pos, radius):
     # Concatenate the opposite side of the board for a horizontal overflow.
     if min_j < 0:
         map_slice = np.hstack((
-            game_map.map[vertical_slice, min_j:-1],
+            game_map.map[vertical_slice, min_j - 1:-1],
             map_slice
         ))
     elif max_j >= game_map.WIDTH:
