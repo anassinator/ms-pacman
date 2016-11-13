@@ -40,17 +40,17 @@ def get_slice(game_map, pac_pos, radius):
             game_map.map[vertical_slice, 0:max_j - game_map.WIDTH]
         ))
 
-    # Concatenate empty cells for any vertical overflow.
+    # Concatenate walls for any vertical overflow.
     height, width = map_slice.shape
     if min_i < 0:
         map_slice = np.vstack((
-            np.zeros((abs(min_i), width), dtype=np.uint8),
+            np.ones((abs(min_i), width), dtype=np.uint8),
             map_slice
         ))
     elif max_i >= game_map.HEIGHT:
         map_slice = np.vstack((
             map_slice,
-            np.zeros((max_i - game_map.HEIGHT, width), dtype=np.uint8)
+            np.ones((max_i - game_map.HEIGHT, width), dtype=np.uint8)
         ))
 
     return hide_cells_behind_wall(map_slice)
@@ -68,8 +68,8 @@ def hide_cells_behind_wall(map_slice):
     height, width = map_slice.shape
     center = (height - 1) / 2
 
-    # Zero is the same as GameMapObjects.EMPTY.
-    shadowed_map = np.zeros((height, width))
+    # One is the same as GameMapObjects.WALL.
+    shadowed_map = np.ones((height, width))
     visited = np.zeros((height, width))
     neighbor_queue = deque()
     neighbor_queue.append((center, center))
