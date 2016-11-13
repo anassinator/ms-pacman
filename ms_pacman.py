@@ -46,9 +46,16 @@ class MsPacManGame(object):
         self.__screen = self._ale.getScreen()
         self.__ram = self._ale.getRAM()
 
+        self._lives = self._ale.lives()
+
         self._update_state()
 
         self._go_to((94, 98), 3)
+
+    @property
+    def lives(self):
+        """Current lives remaining."""
+        return self._lives
 
     @property
     def reward(self):
@@ -123,17 +130,18 @@ class MsPacManGame(object):
             self._ms_pacman_position[1] + m[1]
         )
         old_reward = self._reward
+        old_lives = self._lives
 
         if GameMapObjects.to_reward(self._map.map[next_pos]) <= 0:
             while self._ms_pacman_position != next_pos:
-                if self.game_over():
+                if self.game_over() or self._lives < old_lives:
                     break
                 self._reward += self._ale.act(action)
                 self._update_state()
 
         else:
             while self._reward == old_reward:
-                if self.game_over():
+                if self.game_over() or self._lives < old_lives:
                     break
                 self._reward += self._ale.act(action)
                 self._update_state()
@@ -234,6 +242,9 @@ class MsPacManGame(object):
         self._ms_pacman_position = self._to_map_position(
             new_ms_pacman_position)
         self._ghost_positions = map(self._to_map_position, new_ghost_positions)
+
+        # Update lives.
+        self._lives = self._ale.lives()
 
     def _update_map(self):
         # Get new map from screen.
