@@ -103,6 +103,9 @@ class MsPacManGame(object):
                     actions.append(action)
         return actions
 
+    def action_to_move(self, action):
+        return [(-1, 0), (0, 1), (0, -1), (1, 0)][action - 2]
+
     def act(self, action):
         """Plays a given action in the game.
 
@@ -112,9 +115,16 @@ class MsPacManGame(object):
         Returns:
             Partial reward gained since last action.
         """
-        self._update_state()
-        partial_reward = self._ale.act(action)
-        self._reward += partial_reward
+        m = self.action_to_move(action)
+        next_raw_pos = (
+            self._raw_ms_pacman_position[0] + m[1] * 6,
+            self._raw_ms_pacman_position[1] + m[0] * 10
+        )
+        partial_reward = 0
+        while self._raw_ms_pacman_position != next_raw_pos:
+            partial_reward += self._ale.act(action)
+            self._update_state()
+            self._reward += partial_reward
         return partial_reward
 
     def game_over(self):

@@ -6,6 +6,7 @@ from game_map_objects import GameMapObjects
 class Learner(object):
     def __init__(self, alpha=0.2):
         self.weights = [0] * 25
+        self.weights[12] = 1
         self.alpha = alpha
 
     def get_utility(self, state):
@@ -15,10 +16,9 @@ class Learner(object):
     def update_weights(self, state, guess_utility, real_utility):
         state_rewards = self.get_state_rewards(state)
         print(guess_utility, real_utility)
-        print(state_rewards)
 
         for i in range(25):
-            self.weights[i] += self.alpha * (guess_utility - real_utility) * \
+            self.weights[i] += self.alpha * (real_utility - guess_utility) * \
                 state_rewards[i]
 
     def get_state_rewards(self, state):

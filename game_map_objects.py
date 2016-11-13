@@ -24,13 +24,13 @@ class GameMapObjects(object):
         """
         reward = 0
         if classification == GameMapObjects.WALL:
-            reward = -1
+            reward = 0
         elif classification == GameMapObjects.PELLET:
-            reward = 5
-        elif classification == GameMapObjects.POWER_UP:
             reward = 10
+        elif classification == GameMapObjects.POWER_UP:
+            reward = 50
         elif classification == GameMapObjects.GHOST:
-            reward = -100
+            reward = 0
         elif classification == GameMapObjects.MS_PACMAN:
             reward = 0
         return reward

@@ -6,7 +6,7 @@ import argparse
 from random import randrange
 from ms_pacman import MsPacManGame
 from learner import Learner
-from transition_model import get_next_state
+from transition_model import *
 
 
 def get_args():
@@ -32,28 +32,33 @@ if __name__ == "__main__":
     learning_agent = Learner()
 
     for episode in range(args.episodes):
+        old_reward = 0
         while not game.game_over():
-            if game._ale.getFrameNumber() % 10 == 0:
-                print(learning_agent.weights)
-                actions = game.available_actions()
-                optimal_a = 0
-                optimal_utility = float("-Infinity")
-                for a in actions:
-                    next_state = get_next_state(game, a)
-                    utility = learning_agent.get_utility(next_state)
-                    if utility > optimal_utility:
-                        optimal_utility = utility
-                        optimal_a = a
-                real_utility = game.act(optimal_a)
-                learning_agent.update_weights(
-                    game.sliced_map.map,
-                    optimal_utility,
-                    real_utility
-                )
-                game_map = game.map
-                sliced_game_map = game.sliced_map
-            else:
-                game.act(0)
+            print(learning_agent.weights)
+            actions = game.available_actions()
+            optimal_a = 0
+            optimal_utility = float("-Infinity")
+            for a in actions:
+                next_state = get_next_state(game, a)
+                utility = learning_agent.get_utility(next_state)
+                if utility > optimal_utility:
+                    optimal_utility = utility
+                    optimal_a = a
+            # next_pos = get_next_position(game, optimal_a)
+            # while game.ms_pacman_position != next_pos and \
+            #         old_reward == game.reward:
+            #     print(game.reward)
+            #     game.act(optimal_a)
+            game.act(optimal_a)
+            real_utility = game.reward - old_reward
+            old_reward = game.reward
+            learning_agent.update_weights(
+                game.sliced_map.map,
+                optimal_utility,
+                real_utility
+            )
+            game_map = game.map
+            sliced_game_map = game.sliced_map
 
             if args.display:
                 cv2.imshow("map", game_map.to_image())
