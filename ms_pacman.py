@@ -85,14 +85,23 @@ class MsPacManGame(object):
 
     def available_actions(self):
         """Returns a list of available actions to consider."""
-        return [
-            0,  # noop
-            1,  # fire
-            2,  # up
-            3,  # right
-            4,  # left
-            5   # down
-        ]
+        actions = []
+
+        for action, move in [
+            (2, (-1, 0)),  # up
+            (3, (0, 1)),   # right
+            (4, (0, -1)),  # left
+            (5, (1, 0))    # down
+        ]:
+            new_pos = (
+                self.ms_pacman_position[0] + move[0],
+                self.ms_pacman_position[1] + move[1]
+            )
+            if 0 <= new_pos[0] < GameMap.HEIGHT and \
+                    0 <= new_pos[1] < GameMap.WIDTH:
+                if self._map.map[new_pos] != GameMapObjects.WALL:
+                    actions.append(action)
+        return actions
 
     def act(self, action):
         """Plays a given action in the game.
