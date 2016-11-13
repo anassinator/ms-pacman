@@ -11,9 +11,6 @@ class Learner(object):
 
     def get_utility(self, state):
         state_rewards = self.get_state_rewards(state)
-        print(state)
-        print(state_rewards)
-        print(self.weights)
         return sum(w * r for w, r in zip(self.weights, state_rewards))
 
     def update_weights(self, state, guess_utility, real_utility):

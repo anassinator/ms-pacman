@@ -172,11 +172,11 @@ class MsPacManGame(object):
             Map index coordinate.
         """
         x, y = pos
-        i = round((y - 2) / 12)
+        i = round((y - 2) / 12.0)
         if x < 83:
-            j = round((x - 18) / 8 + 1)
+            j = round((x - 18) / 8.0 + 1)
         elif 93 < x < 169:
-            j = round((x - 22) / 8 + 1)
+            j = round((x - 22) / 8.0 + 1)
         elif x > 169:
             j = 0
         elif x < 88:

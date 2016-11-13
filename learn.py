@@ -34,18 +34,15 @@ if __name__ == "__main__":
     for episode in range(args.episodes):
         while not game.game_over():
             print(learning_agent.weights)
-            actions = game.available_actions()
             optimal_a = 0
             optimal_utility = float("-Infinity")
-            for a in actions:
+            for a in game.available_actions():
                 next_state = get_next_state(game, a)
                 utility = learning_agent.get_utility(next_state)
                 if utility > optimal_utility:
                     optimal_utility = utility
                     optimal_a = a
             real_utility = game.act(optimal_a)
-            print(game._raw_ms_pacman_position)
-            print(game.reward)
             learning_agent.update_weights(
                 game.sliced_map.map,
                 optimal_utility,
@@ -58,6 +55,6 @@ if __name__ == "__main__":
                 cv2.imshow("map", game_map.to_image())
                 cv2.imshow("sliced map", sliced_game_map.to_image())
                 cv2.waitKey(1)
-            time.sleep(3)
+            time.sleep(2)
         print("episode {}: {}".format(episode + 1, game.reward))
         game.reset_game()
