@@ -124,8 +124,21 @@ class MsPacManGame(object):
         )
         next_raw_pos = self._to_raw_position(next_pos)
         old_reward = self._reward
+
+        if self._raw_ms_pacman_position[0] < next_raw_pos[0]:
+            next_raw_pos = (next_raw_pos[0] + 1, next_raw_pos[1])
+        else:
+            next_raw_pos = (next_raw_pos[0] - 1, next_raw_pos[1])
+
+        if self._raw_ms_pacman_position[1] < next_raw_pos[1]:
+            next_raw_pos = (next_raw_pos[0], next_raw_pos[1] + 1)
+        else:
+            next_raw_pos = (next_raw_pos[0], next_raw_pos[1] - 1)
+
         while abs(self._raw_ms_pacman_position[0] - next_raw_pos[0]) > 1 or \
                 abs(self._raw_ms_pacman_position[1] - next_raw_pos[1]) > 1:
+            if self.game_over():
+                return -100
             partial_reward = self._ale.act(action)
             self._update_state()
             self._reward += partial_reward

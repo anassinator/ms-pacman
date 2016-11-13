@@ -55,6 +55,5 @@ if __name__ == "__main__":
                 cv2.imshow("map", game_map.to_image())
                 cv2.imshow("sliced map", sliced_game_map.to_image())
                 cv2.waitKey(1)
-            time.sleep(2)
         print("episode {}: {}".format(episode + 1, game.reward))
         game.reset_game()
