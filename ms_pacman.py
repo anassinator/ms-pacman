@@ -3,8 +3,8 @@
 import sys
 import random
 from game_map import GameMap, SlicedGameMap
-from game_map_objects import GameMapObjects
 from ale_python_interface import ALEInterface
+from game_map_objects import GameMapObjects, Ghost
 
 
 class MsPacManGame(object):
@@ -21,7 +21,7 @@ class MsPacManGame(object):
         self._ale = ALEInterface()
 
         if seed is None:
-            seed = random.randint(0, 25500)
+            seed = random.randint(0, 255)
         self._ale.setInt("random_seed", seed)
 
         if display:
@@ -40,8 +40,7 @@ class MsPacManGame(object):
         self._ale.loadROM("MS_PACMAN.BIN")
 
         self._reward = 0
-        self._ms_pacman_direction = self._raw_ms_pacman_position = (0, 0)
-        self._ghost_directions = self._raw_ghost_positions = [(0, 0)] * 4
+        self._raw_ms_pacman_position = (0, 0)
 
         self.__screen = self._ale.getScreen()
         self.__ram = self._ale.getRAM()
@@ -78,19 +77,9 @@ class MsPacManGame(object):
         return self._ms_pacman_position
 
     @property
-    def ghost_positions(self):
-        """Ghost positions as a list of map indices."""
-        return self._ghost_positions
-
-    @property
-    def ms_pacman_direction(self):
-        """Ms. PacMan's direction as an (x, y) tuple."""
-        return self._ms_pacman_direction
-
-    @property
-    def ghost_directions(self):
-        """Ghost directions as a list of (x, y) tuples."""
-        return self._ghost_directions
+    def ghosts(self):
+        """List of ghosts."""
+        return self._ghosts
 
     def available_actions(self):
         """Returns a list of available actions to consider."""
@@ -144,7 +133,7 @@ class MsPacManGame(object):
                 if self._ms_pacman_position != old_pos:
                     break
                 if self.game_over() or self._lives < old_lives:
-                    return GameMapObjects.to_reward(GameMapObjects.GHOST)
+                    return GameMapObjects.to_reward(GameMapObjects.BAD_GHOST)
                 self._reward += self._ale.act(action)
                 self._update_state()
 
@@ -153,7 +142,7 @@ class MsPacManGame(object):
                 if self._ms_pacman_position not in (old_pos, next_pos):
                     break
                 if self.game_over() or self._lives < old_lives:
-                    return GameMapObjects.to_reward(GameMapObjects.GHOST)
+                    return GameMapObjects.to_reward(GameMapObjects.BAD_GHOST)
                 self._reward += self._ale.act(action)
                 self._update_state()
 
@@ -161,8 +150,8 @@ class MsPacManGame(object):
         return self._reward - old_reward
 
     def _go_to(self, raw_pos, action):
-        while abs(self._raw_ms_pacman_position[0] - raw_pos[0]) > 1 or \
-                abs(self._raw_ms_pacman_position[1] - raw_pos[1]) > 1:
+        while (abs(self._raw_ms_pacman_position[0] - raw_pos[0]) > 1 or
+                abs(self._raw_ms_pacman_position[1] - raw_pos[1]) > 1):
             self._ale.act(action)
             self._update_state()
         self._update_map()
@@ -175,20 +164,6 @@ class MsPacManGame(object):
         """Resets the game to the initial state."""
         self._reward = 0
         return self._ale.reset_game()
-
-    def _get_direction(self, prev, curr, prev_direction):
-        """Computes the relative direction from one position to another.
-
-        Args:
-            prev: Previous (x, y) position.
-            curr: Current (x, y) position.
-            prev_direction: Previous direction.
-
-        Returns:
-            Relative direction.
-        """
-        new_direction = (curr[0] - prev[0], curr[1] - prev[1])
-        return new_direction if new_direction != (0, 0) else prev_direction
 
     def _to_map_position(self, pos):
         """Converts a RAM coordinate into a map coordinate.
@@ -229,30 +204,21 @@ class MsPacManGame(object):
         # Get new states from RAM.
         self._ale.getRAM(self.__ram)
         new_ms_pacman_position = (int(self.__ram[10]), int(self.__ram[16]))
-        new_ghost_positions = [
-            (int(self.__ram[6]), int(self.__ram[12])),
-            (int(self.__ram[7]), int(self.__ram[13])),
-            (int(self.__ram[8]), int(self.__ram[14])),
-            (int(self.__ram[9]), int(self.__ram[15]))
-        ]
-
-        # Update directions.
-        self._ms_pacman_direction = self._get_direction(
-            self._raw_ms_pacman_position, new_ms_pacman_position,
-            self._ms_pacman_direction)
-        self._ghost_directions = [
-            self._get_direction(self._raw_ghost_positions[i],
-                                new_ghost_positions[i],
-                                self._ghost_directions[i])
-            for i in range(len(new_ghost_positions))
+        new_ghosts_ram = [
+            ((int(self.__ram[6]), int(self.__ram[12])), int(self.__ram[1])),
+            ((int(self.__ram[7]), int(self.__ram[13])), int(self.__ram[2])),
+            ((int(self.__ram[8]), int(self.__ram[14])), int(self.__ram[3])),
+            ((int(self.__ram[9]), int(self.__ram[15])), int(self.__ram[4]))
         ]
 
         # Update positions.
         self._raw_ms_pacman_position = new_ms_pacman_position
-        self._raw_ghost_positions = new_ghost_positions
         self._ms_pacman_position = self._to_map_position(
             new_ms_pacman_position)
-        self._ghost_positions = map(self._to_map_position, new_ghost_positions)
+        self._ghosts = [
+            Ghost.from_ram(self._to_map_position(pos), ram)
+            for pos, ram in new_ghosts_ram
+        ]
 
         # Update lives.
         self._lives = self._ale.lives()
@@ -262,7 +228,10 @@ class MsPacManGame(object):
         self._ale.getScreen(self.__screen)
         self._map = GameMap(self.__screen.reshape(210, 160))
         self._map.map[self._ms_pacman_position] = GameMapObjects.MS_PACMAN
-        for ghost_pos in self._ghost_positions:
-            self._map.map[ghost_pos] = GameMapObjects.GHOST
+        for ghost in self._ghosts:
+            if ghost.state == Ghost.GOOD:
+                self._map.map[ghost.pos] = GameMapObjects.GOOD_GHOST
+            elif ghost.state == Ghost.BAD:
+                self._map.map[ghost.pos] = GameMapObjects.BAD_GHOST
         self._sliced_map = SlicedGameMap(self._map,
                                          self._ms_pacman_position)

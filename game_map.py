@@ -14,9 +14,6 @@ class GameMap(object):
     HEIGHT = 14
 
     PRIMARY_COLOR = 74
-    SECONDARY_COLOR = 144
-    MS_PACMAN_COLOR = 42
-    GHOST_COLORS = (70, 88, 157, 217)
 
     def __init__(self, image):
         """Constructs a GameMap from an image.
