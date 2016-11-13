@@ -24,31 +24,33 @@ def get_slice(game_map, pac_pos, radius):
     min_j = pac_pos[1] - radius
     max_j = pac_pos[1] + radius + 1
 
-    map_slice = game_map.map[
-        max(min_i, 0):min(max_i, game_map.HEIGHT),
-        max(min_j, 0):min(max_j, game_map.WIDTH)
-    ]
+    vertical_slice = slice(max(min_i, 0), min(max_i, game_map.HEIGHT))
+    horizontal_slice = slice(max(min_j, 0), min(max_j, game_map.WIDTH))
+    map_slice = game_map.map[vertical_slice, horizontal_slice]
 
-    height, width = map_slice.shape
+    # Concatenate the opposite side of the board for a horizontal overflow.
     if min_j < 0:
         map_slice = np.hstack((
-            np.zeros((height, abs(min_j)), dtype=np.uint8),
+            game_map.map[vertical_slice, min_j:-1],
             map_slice
         ))
     elif max_j >= game_map.WIDTH:
         map_slice = np.hstack((
             map_slice,
-            np.zeros((height, max_j - game_map.WIDTH), dtype=np.uint8)
+            game_map.map[vertical_slice, 0:max_j - game_map.WIDTH]
         ))
+
+    # Concatenate empty cells for any vertical overflow.
+    height, width = map_slice.shape
     if min_i < 0:
         map_slice = np.vstack((
-            np.zeros((abs(min_i), max_j - min_j), dtype=np.uint8),
+            np.zeros((abs(min_i), width), dtype=np.uint8),
             map_slice
         ))
     elif max_i >= game_map.HEIGHT:
         map_slice = np.vstack((
             map_slice,
-            np.zeros((max_i - game_map.HEIGHT, max_j - min_j), dtype=np.uint8)
+            np.zeros((max_i - game_map.HEIGHT, width), dtype=np.uint8)
         ))
 
     return hide_cells_behind_wall(map_slice)
