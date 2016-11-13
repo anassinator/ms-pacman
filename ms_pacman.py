@@ -144,7 +144,7 @@ class MsPacManGame(object):
                 if self._ms_pacman_position != old_pos:
                     break
                 if self.game_over() or self._lives < old_lives:
-                    break
+                    return GameMapObjects.to_reward(GameMapObjects.GHOST)
                 self._reward += self._ale.act(action)
                 self._update_state()
 
@@ -153,7 +153,7 @@ class MsPacManGame(object):
                 if self._ms_pacman_position not in (old_pos, next_pos):
                     break
                 if self.game_over() or self._lives < old_lives:
-                    break
+                    return GameMapObjects.to_reward(GameMapObjects.GHOST)
                 self._reward += self._ale.act(action)
                 self._update_state()
 

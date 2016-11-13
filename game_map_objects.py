@@ -30,7 +30,7 @@ class GameMapObjects(object):
         elif classification == GameMapObjects.POWER_UP:
             reward = 50
         elif classification == GameMapObjects.GHOST:
-            reward = 0
+            reward = -100
         elif classification == GameMapObjects.MS_PACMAN:
             reward = 0
         return reward
