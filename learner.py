@@ -1,27 +1,45 @@
 # -*- coding: utf-8 -*-
 
+from transition_model import get_next_state
 from game_map_objects import GameMapObjects
 
 
 class Learner(object):
-    def __init__(self, alpha=0.2):
+
+    def __init__(self, alpha=0.0002, gamma=0.07):
         self.weights = [0] * 25
         self.weights[12] = 1
         self.alpha = alpha
+        self.gamma = gamma
 
-    def get_utility(self, state):
-        state_rewards = self.get_state_rewards(state)
+    def _get_utility(self, state):
+        state_rewards = self._get_state_rewards(state)
         return sum(w * r for w, r in zip(self.weights, state_rewards))
 
-    def update_weights(self, state, guess_utility, real_utility):
-        state_rewards = self.get_state_rewards(state)
+    def get_optimal_action(self, game):
+        optimal_utility = float("-inf")
+        optimal_a = 0
+
+        for a in game.available_actions():
+            next_state = get_next_state(game, a)
+            utility = self._get_utility(next_state)
+            if utility > optimal_utility:
+                optimal_utility = utility
+                optimal_a = a
+
+        return (optimal_a, optimal_utility)
+
+    def update_weights(self, game, guess_utility, reward):
+        state_rewards = self._get_state_rewards(game.sliced_map.map)
+        real_utility = reward + self.gamma * self.get_optimal_action(game)[1]
         print(guess_utility, real_utility)
 
         for i in range(25):
-            self.weights[i] += self.alpha * (real_utility - guess_utility) * \
-                state_rewards[i]
+            self.weights[i] += (
+                self.alpha *
+                (real_utility - guess_utility) * state_rewards[i])
 
-    def get_state_rewards(self, state):
+    def _get_state_rewards(self, state):
         height, width = state.shape
         state_rewards = []
 
