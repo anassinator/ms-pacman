@@ -131,9 +131,14 @@ class MsPacManGame(object):
         )
         old_reward = self._reward
         old_lives = self._lives
+        old_pos = self._ms_pacman_position
 
-        if GameMapObjects.to_reward(self._map.map[next_pos]) <= 0:
+        expected_reward = GameMapObjects.to_reward(self._map.map[next_pos])
+
+        if expected_reward <= 0:
             while self._ms_pacman_position != next_pos:
+                if self._ms_pacman_position != old_pos:
+                    break
                 if self.game_over() or self._lives < old_lives:
                     break
                 self._reward += self._ale.act(action)
@@ -141,6 +146,8 @@ class MsPacManGame(object):
 
         else:
             while self._reward == old_reward:
+                if self._ms_pacman_position not in (old_pos, next_pos):
+                    break
                 if self.game_over() or self._lives < old_lives:
                     break
                 self._reward += self._ale.act(action)
