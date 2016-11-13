@@ -4,7 +4,7 @@ import sys
 import random
 from game_map import GameMap, SlicedGameMap
 from ale_python_interface import ALEInterface
-from game_map_objects import GameMapObjects, Ghost
+from game_map_objects import GameMapObjects, Fruit, Ghost
 
 
 class MsPacManGame(object):
@@ -75,6 +75,11 @@ class MsPacManGame(object):
     def ms_pacman_position(self):
         """Ms. PacMan's position as a map index."""
         return self._ms_pacman_position
+
+    @property
+    def fruit(self):
+        """Fruit."""
+        return self._fruit
 
     @property
     def ghosts(self):
@@ -210,6 +215,9 @@ class MsPacManGame(object):
             ((int(self.__ram[8]), int(self.__ram[14])), int(self.__ram[3])),
             ((int(self.__ram[9]), int(self.__ram[15])), int(self.__ram[4]))
         ]
+        fruit = (int(self.__ram[11]), int(self.__ram[17])), int(self.__ram[5])
+        self._fruit = Fruit.from_ram(self._to_map_position(fruit[0]), fruit[1],
+                                     fruit[0] != (0, 0))
 
         # Update positions.
         self._raw_ms_pacman_position = new_ms_pacman_position
@@ -228,10 +236,12 @@ class MsPacManGame(object):
         self._ale.getScreen(self.__screen)
         self._map = GameMap(self.__screen.reshape(210, 160))
         self._map.map[self._ms_pacman_position] = GameMapObjects.MS_PACMAN
+        if self._fruit.exists:
+            self._map.map[self._fruit.position] = GameMapObjects.FRUIT
         for ghost in self._ghosts:
             if ghost.state == Ghost.GOOD:
-                self._map.map[ghost.pos] = GameMapObjects.GOOD_GHOST
+                self._map.map[ghost.position] = GameMapObjects.GOOD_GHOST
             elif ghost.state == Ghost.BAD:
-                self._map.map[ghost.pos] = GameMapObjects.BAD_GHOST
+                self._map.map[ghost.position] = GameMapObjects.BAD_GHOST
         self._sliced_map = SlicedGameMap(self._map,
                                          self._ms_pacman_position)

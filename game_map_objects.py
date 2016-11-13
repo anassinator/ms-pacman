@@ -1,33 +1,65 @@
 # -*- coding: utf-8 -*-
 
 
-class Ghost(object):
+class MovableGameMapObject(object):
 
-    """Ghost."""
+    """Movable game map object."""
 
-    BAD = 0
-    GOOD = 1
-
-    def __init__(self, pos, state, direction):
-        self.pos = pos
-        self.state = state
+    def __init__(self, position, direction):
+        self.position = position
         self.direction = direction
 
     @classmethod
-    def from_ram(self, pos, ram):
+    def from_ram(cls, position, ram):
+        direction = cls._get_direction(ram)
+        return MovableGameMapObject(position, direction)
+
+    @classmethod
+    def _get_direction(cls, ram):
         direction_ram = ram & 3
         direction = \
             [-1, 0] if direction_ram == 0 else \
             [0, 1] if direction_ram == 1 else \
             [1, 0] if direction_ram == 2 else \
             [0, -1]
+        return direction
 
+
+class Ghost(MovableGameMapObject):
+
+    """Ghost."""
+
+    BAD = 0
+    GOOD = 1
+
+    def __init__(self, position, direction, state):
+        super(Ghost, self).__init__(position, direction)
+        self.state = state
+
+    @classmethod
+    def from_ram(cls, position, ram):
+        direction = cls._get_direction(ram)
         edible_ram = (ram >> 7) & 1
         state = \
-            Ghost.GOOD if edible_ram == 1 else \
-            Ghost.BAD
+            cls.GOOD if edible_ram == 1 else \
+            cls.BAD
 
-        return Ghost(pos, state, direction)
+        return cls(position, direction, state)
+
+
+class Fruit(MovableGameMapObject):
+
+    """Fruit."""
+
+    def __init__(self, position, direction, exists):
+        super(Fruit, self).__init__(position, direction)
+        self.exists = exists
+
+    @classmethod
+    def from_ram(cls, position, ram, exists):
+        # Direction is probably bad...
+        direction = cls._get_direction(ram)
+        return cls(position, direction, exists)
 
 
 class GameMapObjects(object):
