@@ -48,6 +48,8 @@ class MsPacManGame(object):
 
         self._update_state()
 
+        self._go_to((94, 98), 3)
+
     @property
     def reward(self):
         """Current total reward."""
@@ -116,16 +118,26 @@ class MsPacManGame(object):
             Partial reward gained since last action.
         """
         m = self.action_to_move(action)
-        next_raw_pos = (
-            self._raw_ms_pacman_position[0] + m[1] * 6,
-            self._raw_ms_pacman_position[1] + m[0] * 10
+        next_pos = (
+            self._ms_pacman_position[0] + m[0],
+            self._ms_pacman_position[1] + m[1]
         )
-        partial_reward = 0
-        while self._raw_ms_pacman_position != next_raw_pos:
-            partial_reward += self._ale.act(action)
+        next_raw_pos = self._to_raw_position(next_pos)
+        old_reward = self._reward
+        while abs(self._raw_ms_pacman_position[0] - next_raw_pos[0]) > 1 or \
+                abs(self._raw_ms_pacman_position[1] - next_raw_pos[1]) > 1:
+            partial_reward = self._ale.act(action)
             self._update_state()
             self._reward += partial_reward
-        return partial_reward
+        self._update_map()
+        return self._reward - old_reward
+
+    def _go_to(self, raw_pos, action):
+        while abs(self._raw_ms_pacman_position[0] - raw_pos[0]) > 1 or \
+                abs(self._raw_ms_pacman_position[1] - raw_pos[1]) > 1:
+            self._ale.act(action)
+            self._update_state()
+        self._update_map()
 
     def game_over(self):
         """Returns whether the game reached a terminal state or not."""
@@ -171,7 +183,18 @@ class MsPacManGame(object):
             j = 9
         else:
             j = 10
-        return (i, j)
+        return i, j
+
+    def _to_raw_position(self, pos):
+        i, j = pos
+        y = i * 12 + 2
+        if j == 0:
+            x = 12
+        elif j <= 9:
+            x = (j - 1) * 8 + 18
+        else:
+            x = (j - 1) * 8 + 22
+        return x, y
 
     def _update_state(self):
         """Updates the internal state of the game."""
@@ -203,12 +226,12 @@ class MsPacManGame(object):
             new_ms_pacman_position)
         self._ghost_positions = map(self._to_map_position, new_ghost_positions)
 
+    def _update_map(self):
         # Get new map from screen.
-        if self._ale.getFrameNumber() % 10 == 0:
-            self._ale.getScreen(self.__screen)
-            self._map = GameMap(self.__screen.reshape(210, 160))
-            self._map.map[self._ms_pacman_position] = GameMapObjects.MS_PACMAN
-            for ghost_pos in self._ghost_positions:
-                self._map.map[ghost_pos] = GameMapObjects.GHOST
-            self._sliced_map = SlicedGameMap(self._map,
-                                             self._ms_pacman_position)
+        self._ale.getScreen(self.__screen)
+        self._map = GameMap(self.__screen.reshape(210, 160))
+        self._map.map[self._ms_pacman_position] = GameMapObjects.MS_PACMAN
+        for ghost_pos in self._ghost_positions:
+            self._map.map[ghost_pos] = GameMapObjects.GHOST
+        self._sliced_map = SlicedGameMap(self._map,
+                                         self._ms_pacman_position)

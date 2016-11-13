@@ -7,6 +7,7 @@ from random import randrange
 from ms_pacman import MsPacManGame
 from learner import Learner
 from transition_model import *
+import time
 
 
 def get_args():
@@ -30,9 +31,7 @@ if __name__ == "__main__":
     args = get_args()
     game = MsPacManGame(args.seed, args.display)
     learning_agent = Learner()
-
     for episode in range(args.episodes):
-        old_reward = 0
         while not game.game_over():
             print(learning_agent.weights)
             actions = game.available_actions()
@@ -44,14 +43,9 @@ if __name__ == "__main__":
                 if utility > optimal_utility:
                     optimal_utility = utility
                     optimal_a = a
-            # next_pos = get_next_position(game, optimal_a)
-            # while game.ms_pacman_position != next_pos and \
-            #         old_reward == game.reward:
-            #     print(game.reward)
-            #     game.act(optimal_a)
-            game.act(optimal_a)
-            real_utility = game.reward - old_reward
-            old_reward = game.reward
+            real_utility = game.act(optimal_a)
+            print(game._raw_ms_pacman_position)
+            print(game.reward)
             learning_agent.update_weights(
                 game.sliced_map.map,
                 optimal_utility,
@@ -64,5 +58,6 @@ if __name__ == "__main__":
                 cv2.imshow("map", game_map.to_image())
                 cv2.imshow("sliced map", sliced_game_map.to_image())
                 cv2.waitKey(1)
+            time.sleep(3)
         print("episode {}: {}".format(episode + 1, game.reward))
         game.reset_game()
