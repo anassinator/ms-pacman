@@ -14,10 +14,14 @@ def get_args():
         Parsed command-line arguments.
     """
     parser = argparse.ArgumentParser(description="plays Ms. Pac-Man")
+    parser.add_argument("--no-learn", default=False, action="store_true",
+                        help="play without training")
     parser.add_argument("--episodes", default=10, type=int,
                         help="number of episodes to run")
     parser.add_argument("--display", action="store_true", default=False,
                         help="whether to display the game on screen or not")
+    parser.add_argument("--map-display", action="store_true", default=False,
+                        help="whether to display the map on screen or not")
     parser.add_argument("--seed", default=None, type=int,
                         help="seed for random number generator to use")
 
@@ -46,10 +50,11 @@ if __name__ == "__main__":
             optimal_a, expected_utility = agent.get_optimal_action(game)
             reward = game.act(optimal_a)
 
-            agent.update_weights(prev_state, optimal_a, game, expected_utility,
-                                 reward)
+            if not args.no_learn:
+                agent.update_weights(prev_state, optimal_a, game,
+                                     expected_utility, reward)
 
-            if args.display:
+            if args.map_display:
                 game_map = game.map
                 sliced_game_map = game.sliced_map
 
