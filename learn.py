@@ -38,7 +38,6 @@ if __name__ == "__main__":
     max_rewards = 0
     for episode in range(args.episodes):
         while not game.game_over():
-            print(agent.human_readable_weights())
             print("Episode {}: {}".format(episode + 1, game.reward))
             if episode:
                 print("Average: {}".format(total_rewards / episode))
@@ -51,6 +50,7 @@ if __name__ == "__main__":
             reward = game.act(optimal_a)
 
             if not args.no_learn:
+                print(agent.human_readable_weights())
                 agent.update_weights(prev_state, optimal_a, game,
                                      expected_utility, reward)
 
@@ -63,6 +63,7 @@ if __name__ == "__main__":
                 cv2.waitKey(1)
 
         print("Episode Complete {}: {}".format(episode + 1, game.reward))
+        print("GLIE: {}".format(agent.glie))
         min_rewards = min(min_rewards, game.reward)
         total_rewards += game.reward
         agent.save()

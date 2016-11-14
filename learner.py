@@ -10,12 +10,17 @@ from game_map_objects import GameMapObjects
 class Learner(object):
 
     WEIGHTS_FILE = "weights.p"
+    GLIE_FILE = "glie.p"
 
     def __init__(self, alpha=0.01, gamma=0.7):
         if not os.path.isfile(self.WEIGHTS_FILE):
             self.weights = [1] * 30
         else:
             self.weights = pickle.load(open(self.WEIGHTS_FILE, "rb"))
+        if not os.path.isfile(self.GLIE_FILE):
+            self.glie = 0.25
+        else:
+            self.glie = pickle.load(open(self.GLIE_FILE, "rb"))
 
         self.weights[self._to_weight_index(12)] = -100
         self.weights[self._to_weight_index(37)] = 200
@@ -39,6 +44,9 @@ class Learner(object):
         optimal_actions = [0]  # noop.
         available_actions = game.available_actions()
 
+        if random.random() <= self.glie:
+            available_actions = [random.choice(available_actions)]
+
         for a in available_actions:
             next_state = get_next_state(game, a)
             utility = self._get_utility(next_state)
@@ -51,6 +59,7 @@ class Learner(object):
         return (random.choice(optimal_actions), optimal_utility)
 
     def update_weights(self, prev_state, action, game, guess_utility, reward):
+        self.glie = max(0.001, self.glie - 1e-5)
         curr_state = game.sliced_map.map.copy()
         curr_state[2, 2] = \
             prev_state[3, 2] if action == 2 else \
@@ -127,3 +136,4 @@ class Learner(object):
 
     def save(self):
         pickle.dump(self.weights, open(self.WEIGHTS_FILE, "wb"))
+        pickle.dump(self.glie, open(self.GLIE_FILE, "wb"))
