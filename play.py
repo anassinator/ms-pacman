@@ -66,6 +66,8 @@ if __name__ == "__main__":
         print("GLIE: {}".format(agent.glie))
         min_rewards = min(min_rewards, game.reward)
         total_rewards += game.reward
-        agent.save()
+
+        if not args.no_learn:
+            agent.save()
 
         game.reset_game()
