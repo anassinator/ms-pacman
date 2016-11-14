@@ -15,7 +15,8 @@ def get_next_state(game, action):
         new_ghost_position = game.get_next_position(ghost.position,
                                                     ghost.direction)
         if (not 0 < new_ghost_position[0] < game_map.HEIGHT or
-                not 0 < new_ghost_position[1] < game_map.WIDTH):
+                not 0 < new_ghost_position[1] < game_map.WIDTH or
+                ghost.position == new_pos):
             if ghost.state == Ghost.GOOD:
                 game_map.map[ghost.position] = GameMapObjects.GOOD_GHOST
             elif ghost.state == Ghost.BAD:
