@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     for episode in range(args.episodes):
         while not game.game_over():
-            print(agent.weights)
+            print(agent.human_readable_weights())
 
             prev_state = game.sliced_map.map
             optimal_a, expected_utility = agent.get_optimal_action(game)
@@ -46,6 +46,8 @@ if __name__ == "__main__":
                 cv2.imshow("map", game_map.to_image())
                 cv2.imshow("sliced map", sliced_game_map.to_image())
                 cv2.waitKey(1)
+
+        agent.save()
 
         print("episode {}: {}".format(episode + 1, game.reward))
         game.reset_game()
