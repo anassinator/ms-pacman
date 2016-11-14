@@ -133,28 +133,27 @@ class MsPacManGame(object):
 
         expected_reward = GameMapObjects.to_reward(self._map.map[next_pos])
 
-        if expected_reward <= 0:
-            while self._ms_pacman_position != next_pos:
-                if self._ms_pacman_position != old_pos:
+        MAX_ACTION_COUNT = 15
+        for _ in range(MAX_ACTION_COUNT):
+            if expected_reward <= 0:
+                if self._ms_pacman_position == next_pos:
                     break
-                if self.game_over() or self._lives < old_lives:
-                    return GameMapObjects.to_reward(GameMapObjects.BAD_GHOST)
-                self._reward += self._ale.act(action)
-                self._update_state()
+            elif self._reward != old_reward:
+                break
 
-        else:
-            while self._reward == old_reward:
-                if self._ms_pacman_position not in (old_pos, next_pos):
-                    break
-                if self.game_over() or self._lives < old_lives:
-                    return GameMapObjects.to_reward(GameMapObjects.BAD_GHOST)
-                self._reward += self._ale.act(action)
-                self._update_state()
+            if self._ms_pacman_position != old_pos:
+                break
+            if self.game_over() or self._lives < old_lives:
+                return GameMapObjects.to_reward(GameMapObjects.BAD_GHOST)
+
+            self._reward += self._ale.act(action)
+            self._update_state()
 
         self._update_map()
         return self._reward - old_reward
 
     def _go_to(self, raw_pos, action):
+        """Goes to a given position."""
         while (abs(self._raw_ms_pacman_position[0] - raw_pos[0]) > 1 or
                 abs(self._raw_ms_pacman_position[1] - raw_pos[1]) > 1):
             self._ale.act(action)
