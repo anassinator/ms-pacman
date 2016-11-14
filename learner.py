@@ -11,11 +11,17 @@ class Learner(object):
 
     WEIGHTS_FILE = "weights.p"
 
-    def __init__(self, alpha=0.0001, gamma=0.9):
+    def __init__(self, alpha=0.01, gamma=0.7):
         if not os.path.isfile(self.WEIGHTS_FILE):
-            self.weights = [0] * 50
+            self.weights = [1] * 30
         else:
             self.weights = pickle.load(open(self.WEIGHTS_FILE, "rb"))
+
+        self.weights[self._to_weight_index(12)] = -100
+        self.weights[self._to_weight_index(37)] = 200
+        self.weights[self._to_weight_index(62)] = 10
+        self.weights[self._to_weight_index(87)] = 50
+        self.weights[self._to_weight_index(112)] = 200
 
         self.alpha = alpha
         self.gamma = gamma
@@ -24,7 +30,8 @@ class Learner(object):
         state_rewards = self._get_state(state)
         utility = 0
         for i in range(len(state_rewards)):
-            utility += self.weights[self._to_weight_index(i)] * state_rewards[i]
+            w_index = self._to_weight_index(i)
+            utility += self.weights[w_index] * state_rewards[i]
         return utility
 
     def get_optimal_action(self, game):
@@ -45,22 +52,26 @@ class Learner(object):
 
     def update_weights(self, prev_state, action, game, guess_utility, reward):
         curr_state = game.sliced_map.map.copy()
-        curr_state[3, 3] = \
-            prev_state[4, 3] if action == 2 else \
-            prev_state[3, 2] if action == 3 else \
-            prev_state[3, 4] if action == 4 else \
-            prev_state[2, 3]
+        curr_state[2, 2] = \
+            prev_state[3, 2] if action == 2 else \
+            prev_state[2, 1] if action == 3 else \
+            prev_state[2, 3] if action == 4 else \
+            prev_state[1, 2]
 
         state_rewards = self._get_state(curr_state)
         real_utility = reward + self.gamma * self.get_optimal_action(game)[1]
-        print(guess_utility, real_utility)
-
         error = 0.5 * (real_utility - guess_utility) ** 2
-        print(error)
+
+        print("Estimated utility: {}".format(guess_utility))
+        print("Actual utility: {}".format(real_utility))
+        print("Error: {}".format(error))
+
         for i in range(len(state_rewards)):
+            if i in (12, 37, 62, 87, 112):
+                continue
             self.weights[self._to_weight_index(i)] += \
                 self.alpha * (real_utility - guess_utility) * \
-                state_rewards[i] / self._to_weight_norm(i % 49)
+                state_rewards[i] / self._to_weight_norm(i % 25)
 
     def _get_state(self, game_map):
         all_state = game_map.flatten()
@@ -84,37 +95,33 @@ class Learner(object):
         return total_state
 
     def _to_weight_index(self, i):
-        return self._to_weight_map(i % 49) + int(i / 49) * 10
+        return self._to_weight_map(i % 25) + int(i / 25) * 6
 
     def _to_weight_map(self, i):
         return [
-            0, 1, 2, 3, 2, 1, 0,
-            1, 4, 5, 6, 5, 4, 1,
-            2, 5, 7, 8, 7, 5, 2,
-            3, 6, 8, 9, 8, 6, 3,
-            2, 5, 7, 8, 7, 5, 2,
-            1, 4, 5, 6, 5, 4, 1,
-            0, 1, 2, 3, 2, 1, 0
+            0, 1, 2, 1, 0,
+            1, 3, 4, 3, 1,
+            2, 4, 5, 4, 2,
+            1, 3, 4, 3, 1,
+            0, 1, 2, 1, 0
         ][i]
 
     def _to_weight_norm(self, i):
         return [
-            4, 8, 8, 4, 8, 8, 4,
-            8, 4, 8, 4, 8, 4, 8,
-            8, 8, 4, 4, 4, 8, 8,
-            4, 4, 4, 1, 4, 4, 4,
-            8, 8, 4, 4, 4, 8, 8,
-            8, 4, 8, 4, 8, 4, 8,
-            4, 8, 8, 4, 8, 8, 4
+            4, 8, 4, 8, 4,
+            8, 4, 4, 4, 8,
+            4, 4, 1, 4, 4,
+            8, 4, 4, 4, 8,
+            4, 8, 4, 8, 4
         ][i]
 
     def human_readable_weights(self):
         s = ""
-        for i in range(5 * 49):
+        for i in range(5 * 25):
             s += "{:+05.2f} ".format(self.weights[self._to_weight_index(i)])
-            if i % 7 == 6:
+            if i % 5 == 4:
                 s += "\n"
-            if i % 49 == 48:
+            if i % 25 == 24:
                 s += "\n"
         return s
 
