@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import random
 from transition_model import get_next_state
 from game_map_objects import GameMapObjects
 
 
 class Learner(object):
 
-    def __init__(self, alpha=0.0002, gamma=0.07):
+    def __init__(self, alpha=0.0002, gamma=0.5):
         self.weights = [0] * 25
         self.weights[12] = 1
+
         self.alpha = alpha
         self.gamma = gamma
 
@@ -18,16 +20,18 @@ class Learner(object):
 
     def get_optimal_action(self, game):
         optimal_utility = float("-inf")
-        optimal_a = 0
+        optimal_actions = [0]  # noop.
 
         for a in game.available_actions():
             next_state = get_next_state(game, a)
             utility = self._get_utility(next_state)
             if utility > optimal_utility:
                 optimal_utility = utility
-                optimal_a = a
+                optimal_actions = [a]
+            elif utility == optimal_utility:
+                optimal_actions.append(a)
 
-        return (optimal_a, optimal_utility)
+        return (random.choice(optimal_actions), optimal_utility)
 
     def update_weights(self, game, guess_utility, reward):
         state_rewards = self._get_state_rewards(game.sliced_map.map)
