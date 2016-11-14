@@ -120,7 +120,7 @@ class SlicedGameMap(object):
 
     """Sliced game map."""
 
-    RADIUS = 2
+    RADIUS = 3
 
     def __init__(self, game_map, ms_pacman_position):
         """Constructs a SlicedGameMap.
