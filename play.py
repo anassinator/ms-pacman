@@ -18,6 +18,8 @@ def get_args():
                         help="play without training")
     parser.add_argument("--episodes", default=1, type=int,
                         help="number of episodes to run")
+    parser.add_argument("--learning-rate", default=0.01, type=float,
+                        help="learning rate")
     parser.add_argument("--display", action="store_true", default=False,
                         help="whether to display the game on screen or not")
     parser.add_argument("--map-display", action="store_true", default=False,
@@ -31,7 +33,7 @@ def get_args():
 if __name__ == "__main__":
     args = get_args()
     game = MsPacManGame(args.seed, args.display)
-    agent = Learner()
+    agent = Learner(args.learning_rate)
 
     total_rewards = 0
     min_rewards = float("inf")
