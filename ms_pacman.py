@@ -133,8 +133,11 @@ class MsPacManGame(object):
 
         expected_reward = GameMapObjects.to_reward(self._map.map[next_pos])
 
-        MAX_ACTION_COUNT = 15
+        MAX_ACTION_COUNT = 50
         for _ in range(MAX_ACTION_COUNT):
+            if self.game_over() or self._lives < old_lives:
+                return GameMapObjects.to_reward(GameMapObjects.BAD_GHOST)
+
             if expected_reward <= 0:
                 if self._ms_pacman_position == next_pos:
                     break
@@ -143,8 +146,6 @@ class MsPacManGame(object):
 
             if self._ms_pacman_position != old_pos:
                 break
-            if self.game_over() or self._lives < old_lives:
-                return GameMapObjects.to_reward(GameMapObjects.BAD_GHOST)
 
             self._reward += self._ale.act(action)
             self._update_state()

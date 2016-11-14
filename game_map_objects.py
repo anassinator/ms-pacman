@@ -69,11 +69,11 @@ class GameMapObjects(object):
     EMPTY = 0
     WALL = 1
     PELLET = 2
-    POWER_UP = 3
-    GOOD_GHOST = 4
+    POWER_UP = 2
+    GOOD_GHOST = 2
     BAD_GHOST = 5
-    FRUIT = 6
-    MS_PACMAN = 7
+    FRUIT = 2
+    MS_PACMAN = 0
 
     @classmethod
     def to_reward(cls, classification):
