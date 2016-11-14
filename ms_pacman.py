@@ -96,7 +96,7 @@ class MsPacManGame(object):
             (4, (0, -1)),  # left
             (5, (1, 0))    # down
         ]:
-            new_pos = self.get_next_position(move)
+            new_pos = self.get_next_position(self._ms_pacman_position, move)
             if 0 <= new_pos[0] < GameMap.HEIGHT:
                 if self._map.map[new_pos] != GameMapObjects.WALL:
                     actions.append(action)
@@ -105,10 +105,10 @@ class MsPacManGame(object):
     def action_to_move(self, action):
         return [(-1, 0), (0, 1), (0, -1), (1, 0)][action - 2]
 
-    def get_next_position(self, move):
+    def get_next_position(self, curr_position, move):
         new_pos = (
-            self.ms_pacman_position[0] + move[0],
-            self.ms_pacman_position[1] + move[1]
+            curr_position[0] + move[0],
+            curr_position[1] + move[1]
         )
         if new_pos[1] < 0:
             new_pos = (new_pos[0], new_pos[1] + GameMap.WIDTH)
@@ -126,7 +126,7 @@ class MsPacManGame(object):
             Partial reward gained since last action.
         """
         m = self.action_to_move(action)
-        next_pos = self.get_next_position(m)
+        next_pos = self.get_next_position(self._ms_pacman_position, m)
         old_reward = self._reward
         old_lives = self._lives
         old_pos = self._ms_pacman_position
@@ -235,6 +235,7 @@ class MsPacManGame(object):
         # Get new map from screen.
         self._ale.getScreen(self.__screen)
         self._map = GameMap(self.__screen.reshape(210, 160))
+        self._blank_map = GameMap.from_map(self._map.map.copy())
         self._map.map[self._ms_pacman_position] = GameMapObjects.MS_PACMAN
         if self._fruit.exists:
             self._map.map[self._fruit.position] = GameMapObjects.FRUIT
