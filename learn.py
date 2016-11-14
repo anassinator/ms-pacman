@@ -29,9 +29,18 @@ if __name__ == "__main__":
     game = MsPacManGame(args.seed, args.display)
     agent = Learner()
 
+    total_rewards = 0
+    min_rewards = float("inf")
+    max_rewards = 0
     for episode in range(args.episodes):
         while not game.game_over():
             print(agent.human_readable_weights())
+            print("Episode {}: {}".format(episode + 1, game.reward))
+            if episode:
+                print("Average: {}".format(total_rewards / episode))
+            max_rewards = max(max_rewards, game.reward)
+            print("Max: {}".format(max_rewards))
+            print("Min: {}".format(min_rewards))
 
             prev_state = game.sliced_map.map
             optimal_a, expected_utility = agent.get_optimal_action(game)
@@ -48,7 +57,8 @@ if __name__ == "__main__":
                 cv2.imshow("sliced map", sliced_game_map.to_image())
                 cv2.waitKey(1)
 
+        min_rewards = min(min_rewards, game.reward)
+        total_rewards += game.reward
         agent.save()
 
-        print("episode {}: {}".format(episode + 1, game.reward))
         game.reset_game()
