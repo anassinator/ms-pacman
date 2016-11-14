@@ -57,6 +57,7 @@ if __name__ == "__main__":
                 cv2.imshow("sliced map", sliced_game_map.to_image())
                 cv2.waitKey(1)
 
+        print("Episode Complete {}: {}".format(episode + 1, game.reward))
         min_rewards = min(min_rewards, game.reward)
         total_rewards += game.reward
         agent.save()
