@@ -129,11 +129,10 @@ class MsPacManGame(object):
         next_pos = self.get_next_position(self._ms_pacman_position, m)
         old_reward = self._reward
         old_lives = self._lives
-        old_pos = self._ms_pacman_position
 
         expected_reward = GameMapObjects.to_reward(self._map.map[next_pos])
 
-        MAX_ACTION_COUNT = 15
+        MAX_ACTION_COUNT = 20
         for _ in range(MAX_ACTION_COUNT):
             if expected_reward <= 0:
                 if self._ms_pacman_position == next_pos:
@@ -141,8 +140,6 @@ class MsPacManGame(object):
             elif self._reward != old_reward:
                 break
 
-            if self._ms_pacman_position != old_pos:
-                break
             if self.game_over() or self._lives < old_lives:
                 return GameMapObjects.to_reward(GameMapObjects.BAD_GHOST)
 
@@ -216,7 +213,7 @@ class MsPacManGame(object):
         ]
         fruit = (int(self.__ram[11]), int(self.__ram[17])), int(self.__ram[5])
         self._fruit = Fruit.from_ram(self._to_map_position(fruit[0]), fruit[1],
-                                     fruit[0] != (0, 0))
+                                     fruit[0][0] != 0)
 
         # Update positions.
         self._raw_ms_pacman_position = new_ms_pacman_position
