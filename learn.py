@@ -33,10 +33,11 @@ if __name__ == "__main__":
         while not game.game_over():
             print(agent.weights)
 
+            prev_state = game.sliced_map.map
             optimal_a, expected_utility = agent.get_optimal_action(game)
             reward = game.act(optimal_a)
 
-            agent.update_weights(game, expected_utility, reward)
+            agent.update_weights(prev_state, game, expected_utility, reward)
 
             if args.display:
                 game_map = game.map

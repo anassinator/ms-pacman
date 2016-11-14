@@ -7,7 +7,7 @@ from game_map_objects import GameMapObjects
 
 class Learner(object):
 
-    def __init__(self, alpha=0.0002, gamma=0.5):
+    def __init__(self, alpha=0.0002, gamma=0.07):
         self.weights = [0] * 25
         self.weights[12] = 1
 
@@ -33,8 +33,8 @@ class Learner(object):
 
         return (random.choice(optimal_actions), optimal_utility)
 
-    def update_weights(self, game, guess_utility, reward):
-        state_rewards = self._get_state_rewards(game.sliced_map.map)
+    def update_weights(self, prev_state, game, guess_utility, reward):
+        state_rewards = self._get_state_rewards(prev_state)
         real_utility = reward + self.gamma * self.get_optimal_action(game)[1]
         print(guess_utility, real_utility)
 
