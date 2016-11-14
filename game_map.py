@@ -14,17 +14,18 @@ class GameMap(object):
     HEIGHT = 14
 
     PRIMARY_COLOR = 74
-    SECONDARY_COLOR = 144
-    MS_PACMAN_COLOR = 42
-    GHOST_COLORS = (70, 88, 157, 217)
 
-    def __init__(self, image):
+    def __init__(self, image, game_map=None):
         """Constructs a GameMap from an image.
 
         Args:
             image: OpenCV image.
         """
         # Discard everything but map.
+        if game_map is not None:
+            self._map = game_map
+            return
+
         self._image = image[2:170]
 
         height, width = self._image.shape
@@ -32,6 +33,10 @@ class GameMap(object):
         self._height_step = height / self.HEIGHT
 
         self._classify()
+
+    @classmethod
+    def from_map(cls, game_map):
+        return cls(None, game_map)
 
     @property
     def map(self):
