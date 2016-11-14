@@ -11,14 +11,9 @@ class Learner(object):
 
     WEIGHTS_FILE = "weights.p"
 
-    def __init__(self, alpha=0.0001, gamma=0.):
+    def __init__(self, alpha=0.0001, gamma=0.9):
         if not os.path.isfile(self.WEIGHTS_FILE):
-            self.weights = [0] * 5 * 49
-            # self.weights[12] = -100
-            # self.weights[37] = 200
-            # self.weights[62] = 10
-            # self.weights[87] = 50
-            # self.weights[112] = 100
+            self.weights = [0] * 50
         else:
             self.weights = pickle.load(open(self.WEIGHTS_FILE, "rb"))
 
@@ -27,7 +22,10 @@ class Learner(object):
 
     def _get_utility(self, state):
         state_rewards = self._get_state(state)
-        return sum(w * r for w, r in zip(self.weights, state_rewards))
+        utility = 0
+        for i in range(len(state_rewards)):
+            utility += self.weights[self._to_weight_index(i)] * state_rewards[i]
+        return utility
 
     def get_optimal_action(self, game):
         optimal_utility = float("-inf")
@@ -45,16 +43,24 @@ class Learner(object):
 
         return (random.choice(optimal_actions), optimal_utility)
 
-    def update_weights(self, prev_state, game, guess_utility, reward):
-        state_rewards = self._get_state(prev_state)
-        real_utility = reward + self.gamma * self._get_utility(game.sliced_map.map)
+    def update_weights(self, prev_state, action, game, guess_utility, reward):
+        curr_state = game.sliced_map.map.copy()
+        curr_state[3, 3] = \
+            prev_state[4, 3] if action == 2 else \
+            prev_state[3, 2] if action == 3 else \
+            prev_state[3, 4] if action == 4 else \
+            prev_state[2, 3]
+
+        state_rewards = self._get_state(curr_state)
+        real_utility = reward + self.gamma * self.get_optimal_action(game)[1]
         print(guess_utility, real_utility)
 
         error = 0.5 * (real_utility - guess_utility) ** 2
         print(error)
-        for i in range(5 * 49):
-            self.weights[i] += \
-                self.alpha * (real_utility - guess_utility) * state_rewards[i]
+        for i in range(len(state_rewards)):
+            self.weights[self._to_weight_index(i)] += \
+                self.alpha * (real_utility - guess_utility) * \
+                state_rewards[i] / self._to_weight_norm(i % 49)
 
     def _get_state(self, game_map):
         all_state = game_map.flatten()
@@ -77,10 +83,35 @@ class Learner(object):
 
         return total_state
 
+    def _to_weight_index(self, i):
+        return self._to_weight_map(i % 49) + int(i / 49) * 10
+
+    def _to_weight_map(self, i):
+        return [
+            0, 1, 2, 3, 2, 1, 0,
+            1, 4, 5, 6, 5, 4, 1,
+            2, 5, 7, 8, 7, 5, 2,
+            3, 6, 8, 9, 8, 6, 3,
+            2, 5, 7, 8, 7, 5, 2,
+            1, 4, 5, 6, 5, 4, 1,
+            0, 1, 2, 3, 2, 1, 0
+        ][i]
+
+    def _to_weight_norm(self, i):
+        return [
+            4, 8, 8, 4, 8, 8, 4,
+            8, 4, 8, 4, 8, 4, 8,
+            8, 8, 4, 4, 4, 8, 8,
+            4, 4, 4, 1, 4, 4, 4,
+            8, 8, 4, 4, 4, 8, 8,
+            8, 4, 8, 4, 8, 4, 8,
+            4, 8, 8, 4, 8, 8, 4
+        ][i]
+
     def human_readable_weights(self):
         s = ""
         for i in range(5 * 49):
-            s += "{:+3.2f} ".format(self.weights[i])
+            s += "{:+05.2f} ".format(self.weights[self._to_weight_index(i)])
             if i % 7 == 6:
                 s += "\n"
             if i % 49 == 48:

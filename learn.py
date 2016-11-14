@@ -37,7 +37,8 @@ if __name__ == "__main__":
             optimal_a, expected_utility = agent.get_optimal_action(game)
             reward = game.act(optimal_a)
 
-            agent.update_weights(prev_state, game, expected_utility, reward)
+            agent.update_weights(prev_state, optimal_a, game, expected_utility,
+                                 reward)
 
             if args.display:
                 game_map = game.map
