@@ -20,8 +20,9 @@ def get_args():
                         help="number of episodes to run")
     parser.add_argument("--learning-rate", default=0.01, type=float,
                         help="learning rate")
-    parser.add_argument("--display", action="store_true", default=False,
-                        help="whether to display the game on screen or not")
+    parser.add_argument("--no-display", action="store_false", default=True,
+                        help="do not display the game on the screen (faster)",
+                        dest="display")
     parser.add_argument("--map-display", action="store_true", default=False,
                         help="whether to display the map on screen or not")
     parser.add_argument("--seed", default=None, type=int,
